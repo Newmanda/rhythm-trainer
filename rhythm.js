@@ -53,9 +53,9 @@ let simpleSet=[
 let currentChunks = [...simpleSet]
 showChunks()
 
-let wooHoo = new Audio('woohoo.mp3');
-let tryAgain = new Audio('tryagain.mp3');
-let groovy = new Audio('groovy.mp3');
+let wooHoo = new Audio('./assets/sounds/woohoo.mp3');
+let tryAgain = new Audio('./assets/sounds/tryagain.mp3');
+let groovy = new Audio('./assets/sounds/groovy.mp3');
 
 
 function setExampleLen(dropchoice) {
