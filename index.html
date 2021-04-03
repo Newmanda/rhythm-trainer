@@ -1,0 +1,315 @@
+<html>
+	<head>
+		<title>HTML5 Rhythm Trainer v.0.2</title>
+  		<meta charset="utf-8">
+  		<meta name="viewport" content="width=device-width, initial-scale=1">
+  		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+		<script src='https://surikov.github.io/webaudiofont/npm/dist/WebAudioFontPlayer.js'></script>
+		<script src='https://surikov.github.io/webaudiofontdata/sound/12840_0_Chaos_sf2_file.js'></script>
+		<script src='https://surikov.github.io/webaudiofontdata/sound/12863_0_Chaos_sf2_file.js'></script>
+		<script src='https://surikov.github.io/webaudiofontdata/sound/12864_0_Chaos_sf2_file.js'></script>
+		<style>
+		.dropdown-menu li:hover {
+ 		   cursor: pointer;
+		}
+		</style>
+		<script>
+		// This test is cobbled together as a proof of concept. I was never a great programmer, and I am very out of practice.
+		// most of the code is directly lifted from the tutorial examples from surikov's webaudiofont resource.
+		// I am so grateful for all the examples on stack overflow for how to implement things I needed!
+		// I have left some currently unused code in here that I may want in future development.
+			const snare = _drum_40_0_Chaos_sf2_file;
+			const highConga = _drum_63_0_Chaos_sf2_file;
+			const lowConga = _drum_64_0_Chaos_sf2_file;
+			const lowCongaNote = 64;
+			const snareNote = 38;
+			const AudioContextFunc = window.AudioContext || window.webkitAudioContext;
+			const audioContext = new AudioContextFunc();
+			const output = audioContext.destination;
+			const player = new WebAudioFontPlayer();
+			player.loader.decodeAfterLoading(audioContext, '_drum_40_0_Chaos_sf2_file');
+			player.loader.decodeAfterLoading(audioContext, '_drum_64_0_Chaos_sf2_file');
+			player.loader.decodeAfterLoading(audioContext, '_drum_63_0_Chaos_sf2_file');
+			
+			var exampleLen = 4;
+			
+			var bpm = 60; //Set Tempo
+			var beatLen = 60 / bpm; // 60 / 60bpm gives value of 1, which appears to make bpm work accurately
+			var startTime = 0;
+			var notes = [[]];
+			var beats = [];
+			var solution = "";
+			var replayOK = 0;
+			var curatedSet = 0;
+			var curatedSetChoice = [];
+			var beatDiv = 4;
+			var countoffLen = 2;
+			var answerSet = [" "];
+			var answerSetDisplay = [];
+			var latestAnswerCount = 0;
+			
+			var simpleSet=[
+			["cheese",1,0,0,0],
+			["eggsand",1,0,0,1],
+			["frenchtoast",1,0,1,0],
+			["hamburger",1,0,1,1],
+			["bacon",1,1,0,0],
+			["wafflesand",1,1,0,1],
+			["applejuice",1,1,1,0],
+			["watermelon",1,1,1,1],
+			["triplet",1,1,1]
+			];
+	
+			var wooHoo = new Audio('woohoo.mp3');
+			var tryAgain = new Audio('tryagain.mp3');
+			var groovy = new Audio('groovy.mp3');
+
+			
+			function setExampleLen(dropchoice) {
+				curatedSet = 0;
+				exampleLen = dropchoice;
+				document.getElementById("selectedLength").innerHTML = "Selected length: " + exampleLen + " beats";
+				replayOK = 0;
+			}
+			
+			function setTempo(dropchoice) {
+				bpm = dropchoice;
+				beatLen = 60 / bpm;
+				document.getElementById("selectedTempo").innerHTML = "Tempo: " + bpm + " bpm";
+			}
+			
+			
+			function cancel(){
+				player.cancelQueue(audioContext);
+			}
+			
+			function getRandomInt(max) {
+				return Math.floor(Math.random() * Math.floor(max));
+			}
+			
+			function createExample() {
+				if (curatedSet == 0) {
+					let setBeat
+					beats = [];
+					for (let n = 0;n < exampleLen; n++) {
+						setBeat = getRandomInt(simpleSet.length);
+						beats[n] = simpleSet[setBeat][0];
+						notes[n] = simpleSet[setBeat].slice(1);
+					}
+				}
+			}
+			
+			function countoff() {
+				var timing=0;
+				for (var n = 0;n < countoffLen; n++) {
+					timing = n * beatLen;
+					player.queueWaveTable(audioContext, output, lowConga, startTime + timing , lowCongaNote, 1);
+				}	
+			}
+			
+			function playFun() {
+					var noteTiming=0;
+					var beatTiming=0;
+					for (var n = 0;n < exampleLen; n++) {
+						beatTiming = n * beatLen;
+						/* player.queueWaveTable(audioContext, output, lowConga, startTime + beatTiming , lowCongaNote, 1); */
+						for (var x = 0;x < notes[n].length; x++) {
+							noteTiming = beatTiming + (x * (beatLen / notes[n].length));
+							if (notes[n][x] == 1) {
+								player.queueWaveTable(audioContext, output, snare, startTime + noteTiming , snareNote, 1);
+							}
+						}
+					}
+			
+			}
+			
+			function start() {
+					document.getElementById("userAnswer").innerHTML = "";
+					document.getElementById("testResult").innerHTML = "";
+					answerSet = [];
+					answerSetDisplay = [];
+					latestAnswerCount = 0;
+					display();
+					createExample();
+					document.getElementById("selectedLength").innerHTML = "Selected length: " + exampleLen + " beats";
+					startTime = audioContext.currentTime;
+					countoff();
+					startTime = audioContext.currentTime + (countoffLen * beatLen);
+					playFun();
+					replayOK = 1;
+				}
+				
+			function replay() {
+					if (replayOK == 1) {
+						startTime = audioContext.currentTime + 0.1;
+						countoff();
+						startTime = audioContext.currentTime + (countoffLen * beatLen);
+						playFun();
+					}
+				}
+			
+			// displays answer when button is pressed
+			function display(){
+				document.getElementById("userAnswer").innerHTML = "Your Answer:" + answerSetDisplay.join("");
+ 			}
+ 			
+ 			function addRhythm(rhythmID) {
+				answerSet[latestAnswerCount] = rhythmID;
+				answerSetDisplay[latestAnswerCount] = '<img src="' + rhythmID + '.png">';
+				display();
+				latestAnswerCount++;
+			}
+			
+			function delRhythm() {
+				answerSet.pop();
+				answerSetDisplay.pop();
+				display();
+				if (latestAnswerCount > 0) {
+					latestAnswerCount--;
+				}
+			}
+ 			
+			function testAnswer()  {
+				var xT = answerSet.join();
+				var yT = beats.join();
+				if (xT == yT) {
+					wooHoo.play();
+					document.getElementById("testResult").innerHTML = "YOU WERE RIGHT!";
+				}
+				else {
+					tryAgain.play();
+					document.getElementById("testResult").innerHTML = "Try Again...";
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div class="jumbotron text-center">
+  			<h1>Rhythm trainer</h1>
+  			<p>version 0.2</p>
+  			<p>by <a href="https://davidnewmanmusic.bandcamp.com/album/the-well-trained-ear-songs-to-strengthen-aural-skills">David Newman</a></p>
+		</div>
+		<div class="container">
+  			<div class="row">
+      			<h2 class="text-center">The Trainer</h2>
+  				<div class="col-sm-2 text-center">
+  					<div class="dropdown btn-group">
+  						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Choose Example Length
+  						<span class="caret"></span></button>
+  						<ul class="dropdown-menu" style="padding-left: 5px;">
+    						<li class="dropdown-item" onclick="setExampleLen(4)">4 beats</li>
+    						<li class="dropdown-item" onclick="setExampleLen(6)">6 beats</li>
+    						<li class="dropdown-item" onclick="setExampleLen(8)">8 beats</li>
+    						<li class="dropdown-item" onclick="setExampleLen(10)">10 beats</li>
+  						</ul>
+  						<div id = "selectedLength">Selected length: 4 beats</div>
+					</div>
+  				</div>
+  				<div class="col-sm-2 text-center">
+  					<div class="dropdown btn-group">
+  						<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Choose Tempo
+  						<span class="caret"></span></button>
+  						<ul class="dropdown-menu" style="padding-left: 5px;">
+    						<li class="dropdown-item" onclick="setTempo(50)">50 bpm</li>
+    						<li class="dropdown-item" onclick="setTempo(60)">60 bpm</li>
+    						<li class="dropdown-item" onclick="setTempo(70)">70 bpm</li>
+    						<li class="dropdown-item" onclick="setTempo(80)">80 bpm</li>
+    						<li class="dropdown-item" onclick="setTempo(90)">90 bpm</li>
+  						</ul>
+  						<div id = "selectedTempo">Tempo: 60 bpm</div>
+					</div>
+  				</div>
+  				<div class="col-sm-4 text-center">
+  					<button type="button" id="testBtn" class="btn btn-primary" onclick = "start()">Create New Exercise</button>
+  				</div>
+  				<div class="col-sm-4 text-center">
+  					<button type="button" id="testBtn" class="btn btn-primary" onclick = "replay()">Replay</button>
+  				</div>
+  			</div>
+  			<div class="row">
+  				</br>
+  				<div class="col-sm-9">
+  					<div id = "userAnswer"></div>
+  				</div>
+  				<div class="col-sm-3 text-center">
+  					<button type="button" id="testBtn" class="btn btn-primary" onclick = "testAnswer()">Check Answer</button>
+  					
+  					<div id = "testResult"></div>
+  				</div>
+  			</div>
+  			<div class="row">
+  				</br>
+  				<div class="col-sm-12 text-center">
+    				<button type="button" class="btn btn-primary" onclick="addRhythm('cheese');" style="padding-left: 4px; padding-right: 4px;"><img src="cheese.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('eggsand');" style="padding-left: 4px; padding-right: 4px;"><img src="eggsand.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('frenchtoast');" style="padding-left: 4px; padding-right: 4px;"><img src="frenchtoast.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('hamburger');" style="padding-left: 4px; padding-right: 4px;"><img src="hamburger.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('bacon');" style="padding-left: 4px; padding-right: 4px;"><img src="bacon.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('wafflesand');" style="padding-left: 4px; padding-right: 4px;"><img src="wafflesand.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('applejuice');" style="padding-left: 4px; padding-right: 4px;"><img src="applejuice.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('watermelon');" style="padding-left: 4px; padding-right: 4px;"><img src="watermelon.png"></button>
+  					<button type="button" class="btn btn-primary" onclick="addRhythm('triplet');" style="padding-left: 4px; padding-right: 4px;"><img src="triplet.png"></button>
+  					
+  					<button type="button" class="btn btn-primary" onclick="delRhythm();" >Delete</button>
+    			</div>	
+  			</div>
+  			<div class="row">
+  				
+  			</div>
+  			<div class="row">
+  				<div class="col-sm-12 text-center">
+  					</br>
+					<p><a href="https://surikov.github.io/webaudiofont/">built using surikov's webaudiofont</a> This is released under the GNU General Public License 3.0</p>
+  				</div>
+  			</div>
+  			<div class="row">
+        		<div class="col-sm-6">
+          			<h3>About</h3>
+      					<p>This is a very preliminary attempt at making an html5 rhythm trainer. Right now it is only for dictation, and only with simple meter beat sets.
+      					This is partly by design, as a major stumbling block for students who struggle with rhythm is recognizing chunks of material.
+      					The intention of this particular trainer will be to reinforce "words" of commonly seen rhythmic patterns.</p>
+      					<p>I realize this interface may not be entirely self explanatory yet, so the idea is that you choose your example length, which defaults to four beat groups.
+      					Then, you create a new exercise, which will then play, with a two beat count-off. Clicking the buttons at the bottom will add that beat group to your answer, which
+      					will then display. If you make a mistake, you can remove the last beat group added with the "delete" button. When you think you have the right answer, click "check answer"
+      					which will tell you if you got it right.</p>
+      				<h3>Changelog:</h3>
+						<p>Version 0.1
+						<ul>
+							<li>first working prototype</li>
+						</ul>
+						</p>
+						<p>Version 0.2
+						<ul>
+							<li>fixed beat comparison error</li>
+							<li>major improvement in code, thanks to Joey O'Donnell (more yet to be incorporated)</li>
+							<li>added tempo dropdown.</li>
+						</ul>
+						</p>
+    			</div>
+    			<div class="col-sm-6">
+      				<h3>TBD</h3>
+      					<p>Too much to itemize right now, but:
+						<ul>
+							<li>add compound meter words</li> 
+							<li>flesh out ways of making it useful</li>
+							<li>add triplets to simple meter</li>
+							<li>try and add a rhythm reader as well (listening for keypresses or taps)</li>
+							<li>make plans for expanding existing codebase to serve other needs.</li>
+							<li>revise code and squish bugs.</li>
+						</ul>
+						</p>
+						
+    			</div>
+  			</div>
+  			
+		</div>
+			
+		
+		
+			
+
+	</body>
+</html>
