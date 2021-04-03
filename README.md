@@ -9,8 +9,7 @@ with a two beat count-off. The user then identifies the pattern.
 
 Written in javascript and html5, both to be supremely portable and to work on whatever devices students may own. (especially phones.)
 
-I used Bootstrap for basic CSS and surikov's webaudiofont to handle audio. All other js and CSS is currently in the HTML file, but
-there is already an effort to separate it out.
+I used Bootstrap for basic CSS and surikov's webaudiofont to handle audio.
 
 I have been learning javascript as I go with this, and have recently gotten some great help cleaning it up, and learning more in
 the process. But there are a few more pieces of code to revise to modern standards, and incorporating more flexibility.
