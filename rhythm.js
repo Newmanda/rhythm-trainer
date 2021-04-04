@@ -166,7 +166,7 @@ function display() {
 
 function addRhythm(rhythmID) {
     answerSet[latestAnswerCount] = rhythmID;
-    answerSetDisplay[latestAnswerCount] = `<img src="${rhythmID}.png">`;
+    answerSetDisplay[latestAnswerCount] = `<img src="./assets/images/${rhythmID}.png">`;
     display();
     latestAnswerCount++;
 }
