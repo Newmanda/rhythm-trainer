@@ -81,6 +81,8 @@ function getRandomInt(max) {
 
 function createExample() {
     if (curatedSet == 0) {
+        beats = [];
+        notes = [];
         let randomRhythm
         for (let n = 0; n < exampleLen; n++) {
             randomRhythm = currentChunks[getRandomInt(currentChunks.length)];
